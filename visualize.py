@@ -70,7 +70,6 @@ def prepare_parser():
 	
 def visualize(arguments):
 	from machine.machine import Machine, MachineState, MachineControl
-	from PIL             import Image, ImageDraw
 	from svgwrite        import Drawing, rgb
 	from svgwrite.shapes import Rect, Circle
 	
