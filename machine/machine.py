@@ -4,13 +4,14 @@ import math
 
 
 
+
+
 class MachineState:
 	def __init__(self, coordinates, *args, **kwargs):
 		super().__init__(*args, **kwargs)
 		
 		
 		self.__coordinates = tuple(coordinates)
-		# self.__velocity    = velocity
 		
 		
 		
@@ -19,9 +20,6 @@ class MachineState:
 		return self.__coordinates
 		
 		
-	# @property
-	# def velocity(self):
-	# 	return self.__velocity
 		
 		
 		
@@ -38,14 +36,18 @@ class MachineControl:
 		
 		
 		
+		
+		
 	@property
 	def velocity(self):
 		return self.__velocity
 		
 		
+		
 	@property
 	def angle(self):
 		return self.__angle
+		
 		
 		
 	@property
@@ -56,16 +58,17 @@ class MachineControl:
 		
 		
 		
+		
+		
 class Machine:
-	def __init__(self, length, state, time_step, *args, **kwargs):
+	def __init__(self, length, time_step, *args, **kwargs):
 		super().__init__(*args, **kwargs)
 		
 		
-		self.__length = length
-		self.__state  = state
-		
-		self.__time      = 0.0
+		self.__length    = length
 		self.__time_step = time_step
+		
+		
 		
 		
 		
@@ -74,16 +77,6 @@ class Machine:
 		return self.__length
 		
 		
-	@property
-	def state(self):
-		return self.__state
-		
-		
-		
-	@property
-	def time(self):
-		return self.__time
-		
 		
 	@property
 	def time_step(self):
@@ -91,29 +84,34 @@ class Machine:
 		
 		
 		
-	#!!!!! callback сделано временно, нужно будет выдавать сообщения
-	def move(self, control, callback):
-		velocity, angle   = control.velocity, control.angle
-		x, y, orientation = self.__state.coordinates
 		
 		
+	def generate_trajectory(self, state, controls_sequence):
+		x, y, orientation = state.coordinates
+		trajectory_time   = 0.0
 		
-		residual_time = control.duration
 		
-		while residual_time > 0.0:
-			x += velocity * math.cos(orientation) * self.__time_step
-			y += velocity * math.sin(orientation) * self.__time_step
-					
-			orientation += \
-				velocity / self.__length * math.tan(angle) \
-					* self.__time_step
-					
-					
-			self.__state  = MachineState([x, y, orientation])
-			self.__time  += self.__time_step
+		yield trajectory_time, state
+		
+		for control in controls_sequence:
+			velocity, angle       = control.velocity, control.angle
+			residual_control_time = control.duration
 			
-			callback()
-			
-			
-			residual_time -= self.__time_step
-			
+			while residual_control_time > 0.0:
+				x += velocity * math.cos(orientation) * self.__time_step
+				y += velocity * math.sin(orientation) * self.__time_step
+				
+				orientation += \
+					velocity / self.__length * math.tan(angle) \
+						* self.__time_step
+						
+						
+				trajectory_time, residual_control_time = \
+					trajectory_time + self.__time_step, \
+						residual_control_time - self.__time_step
+						
+				state = MachineState([x, y, orientation])
+				
+				
+				yield trajectory_time, state
+				

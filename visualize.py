@@ -4,6 +4,8 @@ import sys
 
 
 
+
+
 def prepare_parser():
 	import argparse
 	
@@ -43,15 +45,6 @@ def prepare_parser():
 	
 	
 	required_arguments.add_argument(
-		"-t", "--time-interval",
-		type     = float,
-		required = True,
-		metavar  = ("time-interval"),
-		help     = "Интервал времени между фиксациями положений платформы"
-	)
-	
-	
-	required_arguments.add_argument(
 		"-o", "--output",
 		type     = argparse.FileType("w"),
 		required = True,
@@ -69,108 +62,77 @@ def prepare_parser():
 	
 	
 def visualize(arguments):
-	from machine.machine import Machine, MachineState, MachineControl
-	from svgwrite        import Drawing, rgb
-	from svgwrite.shapes import Rect, Circle
+	from machine.config_reader       import load_machine
+	from machine.machine             import MachineState, MachineControl
+	from visualization.config_reader import load_visualizer
 	
-	import math
-	
-	
+	import os
 	
 	
 	
-	trajectory_view_width  = 500
-	trajectory_view_height = 500
-	trajectory_view        = \
-		Drawing(
-			size = (trajectory_view_width, trajectory_view_height)
-		)
+	# Создание объекта аппарата и визуализатора траектории
+	script_file_name = os.path.abspath(__file__)
+	directory_name   = os.path.dirname(script_file_name)
+	
+	
+	try:
+		machine_config_file = open(directory_name + "/machine.conf", "r")
+		machine             = load_machine(machine_config_file)
+		machine_config_file.close()
+	except:
+		raise Exception() #!!!!! Генерировать хорошие исключения
 		
 		
-	machine_state_view_width  = 30
-	machine_state_view_height = 50
-	
-	
-	
-	machine = \
-		Machine(
-			length    = 1,
-			state     = MachineState(arguments.start),
-			time_step = 0.1
-		)
-		
-	last_time = 0.0
-	
-	
-	def draw_machine_state():
-		nonlocal last_time
+	try:
+		visualizer_config_file = open(directory_name + "/visualizer.conf", "r")
+		visualizer             = load_visualizer(visualizer_config_file)
+		visualizer_config_file.close()
+	except:
+		raise Exception() #!!!!! Генерировать хорошие исключения
 		
 		
-		need_drawing = \
-			machine.time - last_time > arguments.time_interval \
-				or last_time == 0.0
-				
-		if need_drawing:
-			machine_state_view_center = \
-				(int(machine.state.coordinates[0]), \
-					trajectory_view_height - int(machine.state.coordinates[1]))
-				
-			machine_state_view_position = \
-				int(machine.state.coordinates[0]) - machine_state_view_width / 2.0, \
-					trajectory_view_height - (int(machine.state.coordinates[1]) + machine_state_view_height / 2.0)
-					
-					
-			machine_state_view = \
-				Rect(
-					insert       = machine_state_view_position,
-					size         = (30, 50),
-					fill         = "#FFFFFF",
-					stroke       = "#000000",
-					stroke_width = 1
+		
+	# Визуализация траектории аппарата
+	def generate_controls_sequence():
+		for control_record in arguments.control:
+			velocity, angle, duration = control_record.split()
+			
+			control = \
+				MachineControl(
+					float(velocity),
+					float(angle),
+					float(duration)
 				)
-			machine_state_view.rotate(
-				- (machine.state.coordinates[2] / math.pi * 180) - 90,
-				center = machine_state_view_center
-			)
-			
-			trajectory_view.add(machine_state_view)
-			
-			# trajectory_view.add(
-			# 	Circle(
-			# 		center = machine_state_view_center,
-			# 		r      = 3
-			# 	)
-			# )
-			
-			last_time += arguments.time_interval
-			
-			
-	draw_machine_state()
-	
-	
-	for control_record in arguments.control:
-		velocity, angle, duration = control_record.split()
-		velocity, angle, duration = \
-			float(velocity), \
-				float(angle), \
-				float(duration)
 				
-		machine.move(
-			MachineControl(velocity, angle, duration),
-			draw_machine_state
+				
+			yield control
+			
+			
+	initial_state     = MachineState(arguments.start)
+	controls_sequence = generate_controls_sequence()
+	
+	
+	try:
+		visualizer.visualize(
+			machine,
+			initial_state,
+			controls_sequence,
+			arguments.output
 		)
+	except:
+		raise Exception() #!!!!! Генерировать хорошие исключения
 		
 		
 		
-	trajectory_view.write(arguments.output)
-	
-	
-	
-	
-	
+		
+		
 if __name__ == "__main__":
 	parser    = prepare_parser()
 	arguments = parser.parse_args()
 	
-	visualize(arguments)
 	
+	try:
+		visualize(arguments)
+	except:
+		raise Exception() #!!!!! Генерировать хорошие исключения
+		
