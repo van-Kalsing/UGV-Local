@@ -4,7 +4,7 @@ import abc
 
 
 
-class SearchingState(metaclass = abc.ABCMeta):
+class State(metaclass = abc.ABCMeta):
 	@abc.abstractproperty
 	def is_final(self):
 		pass
@@ -27,7 +27,7 @@ class SearchingState(metaclass = abc.ABCMeta):
 		
 		
 		
-class EvaluatedSearchingState(SearchingState):
+class EvaluatedState(State):
 	@abc.abstractproperty
 	def estimation(self):
 		pass

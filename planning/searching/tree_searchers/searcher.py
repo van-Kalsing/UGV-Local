@@ -1,3 +1,5 @@
+from utilities.memoization import memoization
+
 import abc
 
 
@@ -6,12 +8,15 @@ import abc
 
 
 
-class TreeSearcher(metaclass = abc.ABCMeta):
+#!!!!! Ввести для записей специальный класс, вместо словарей
+class Searcher(metaclass = abc.ABCMeta):
 	def __init__(self, initial_state, *args, **kwargs):
 		super().__init__(*args, **kwargs)
 		
 		
 		self.__initial_state = initial_state
+		
+		self.__search = memoization(self.__search)
 		
 		
 		
@@ -45,13 +50,10 @@ class TreeSearcher(metaclass = abc.ABCMeta):
 		
 		
 		
-	#!!!!! Сделать приватным
-	#!!!!! Должно лениво вызываться при попытке извлечь найденное решение
-	#!!!!! или стоимости решения
-	def search(self):
+	def __search(self):
 		initial_state_record = \
 			{
-				"state":       initial_state,
+				"state":       self.__initial_state,
 				"predecessor": None,
 				"cost":        0.0
 			}
@@ -66,6 +68,7 @@ class TreeSearcher(metaclass = abc.ABCMeta):
 			cost         = state_record["cost"]
 			
 			
+			# print(state.machine_state.coordinates)
 			if state.is_final:
 				final_states_sequence = []
 				
@@ -74,7 +77,9 @@ class TreeSearcher(metaclass = abc.ABCMeta):
 					
 					state_record = state_record["predecessor"]
 					
-					
+				break
+				
+				
 			else:
 				for successor_state in state.successors:
 					transfer_cost = state.get_transfer_cost(successor_state)
@@ -93,6 +98,18 @@ class TreeSearcher(metaclass = abc.ABCMeta):
 		else:
 			final_states_sequence = None
 			
+			
+			
+		return final_states_sequence
+		
+		
+		
+	@property
+	def final_states_sequence(self):
+		final_states_sequence = self.__search()
+		
+		if final_states_sequence is not None:
+			final_states_sequence = list(final_states_sequence)
 			
 			
 		return final_states_sequence

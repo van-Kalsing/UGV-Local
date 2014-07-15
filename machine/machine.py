@@ -1,3 +1,6 @@
+from machine.state import State
+
+import configparser
 import math
 
 
@@ -6,60 +9,6 @@ import math
 
 
 
-class MachineState:
-	def __init__(self, coordinates, *args, **kwargs):
-		super().__init__(*args, **kwargs)
-		
-		
-		self.__coordinates = tuple(coordinates)
-		
-		
-		
-	@property
-	def coordinates(self):
-		return self.__coordinates
-		
-		
-		
-		
-		
-		
-		
-class MachineControl:
-	def __init__(self, velocity, angle, duration, *args, **kwargs):
-		super().__init__(*args, **kwargs)
-		
-		
-		self.__velocity = velocity
-		self.__angle    = angle
-		self.__duration = duration
-		
-		
-		
-		
-		
-	@property
-	def velocity(self):
-		return self.__velocity
-		
-		
-		
-	@property
-	def angle(self):
-		return self.__angle
-		
-		
-		
-	@property
-	def duration(self):
-		return self.__duration
-		
-		
-		
-		
-		
-		
-		
 class Machine:
 	def __init__(self, length, time_step, *args, **kwargs):
 		super().__init__(*args, **kwargs)
@@ -86,7 +35,7 @@ class Machine:
 		
 		
 		
-	def generate_trajectory(self, state, controls_sequence):
+	def compute_trajectory(self, state, controls_sequence):
 		x, y, orientation = state.coordinates
 		trajectory_time   = 0.0
 		
@@ -110,8 +59,46 @@ class Machine:
 					trajectory_time + self.__time_step, \
 						residual_control_time - self.__time_step
 						
-				state = MachineState([x, y, orientation])
+				state = State([x, y, orientation])
 				
 				
 				yield trajectory_time, state
 				
+				
+				
+				
+				
+				
+				
+def load_machine(config_file):
+	def create_machine(parser):
+		try:
+			length    = parser.getfloat("DEFAULT", "MachineLength")
+			time_step = parser.getfloat("DEFAULT", "TimeStep")
+		except:
+			raise Exception() #!!!!! Генерировать хорошие исключения
+			
+			
+		machine = Machine(length, time_step)
+		
+		return machine
+		
+		
+		
+	parser = configparser.ConfigParser()
+	
+	
+	try:
+		parser.read_file(config_file)
+	except:
+		raise Exception() #!!!!! Генерировать хорошие исключения
+		
+		
+	try:
+		machine = create_machine(parser)
+	except:
+		raise Exception() #!!!!! Генерировать хорошие исключения
+		
+		
+	return machine
+	

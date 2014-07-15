@@ -62,9 +62,10 @@ def prepare_parser():
 	
 	
 def visualize(arguments):
-	from machine.config_reader       import load_machine
-	from machine.machine             import MachineState, MachineControl
-	from visualization.config_reader import load_visualizer
+	from machine.control          import Control as MachineControl
+	from machine.machine          import load_machine
+	from machine.state            import State as MachineState
+	from visualization.visualizer import load_visualizer
 	
 	import os
 	
@@ -113,10 +114,14 @@ def visualize(arguments):
 	
 	
 	try:
+		trajectory = \
+			machine.compute_trajectory(
+				initial_state,
+				controls_sequence
+			)
+			
 		visualizer.visualize(
-			machine,
-			initial_state,
-			controls_sequence,
+			trajectory,
 			arguments.output
 		)
 	except:

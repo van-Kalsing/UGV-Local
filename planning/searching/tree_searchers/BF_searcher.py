@@ -1,13 +1,12 @@
-from planning.searching.searchers.tree_searchers.tree_searcher \
-	import TreeSearcher
-	
-	
-	
-	
-	
-	
-	
-class BFSearcher(TreeSearcher):
+from planning.searching.tree_searchers.searcher import Searcher
+
+
+
+
+
+
+
+class BFSearcher(Searcher):
 	def __init__(self, *args, **kwargs):
 		super().__init__(*args, **kwargs)
 		

@@ -1,6 +1,7 @@
 from svgwrite        import Drawing, rgb
 from svgwrite.shapes import Rect
 
+import configparser
 import math
 
 
@@ -36,7 +37,7 @@ class Visualizer:
 		
 		
 		
-	def visualize(self, machine, initial_state, controls_sequence, output_file):
+	def visualize(self, trajectory, output_file):
 		drawing = Drawing()
 		
 		
@@ -52,12 +53,6 @@ class Visualizer:
 		
 		# Создание последовательности записываемых состояний аппарата
 		def generate_states_sequence():
-			trajectory = \
-				machine.generate_trajectory(
-					initial_state,
-					controls_sequence
-				)
-				
 			spawn_time = 0.0
 			
 			for trajectory_time, state in trajectory:
@@ -140,3 +135,46 @@ class Visualizer:
 		except:
 			raise Exception() #!!!!! Генерировать хорошие исключения
 			
+			
+			
+			
+			
+			
+			
+def load_visualizer(config_file):
+	def create_visualizer(parser):
+		try:
+			machine_length = parser.getfloat("DEFAULT", "MachineLength")
+			machine_width  = parser.getfloat("DEFAULT", "MachineWidth")
+			time_interval  = parser.getfloat("DEFAULT", "TimeInterval")
+		except:
+			raise Exception() #!!!!! Генерировать хорошие исключения
+			
+			
+		visualizer = \
+			Visualizer(
+				machine_size  = (machine_length, machine_width),
+				time_interval = time_interval
+			)
+			
+		return visualizer
+		
+		
+		
+	parser = configparser.ConfigParser()
+	
+	
+	try:
+		parser.read_file(config_file)
+	except:
+		raise Exception() #!!!!! Генерировать хорошие исключения
+		
+		
+	try:
+		visualizer = create_visualizer(parser)
+	except:
+		raise Exception() #!!!!! Генерировать хорошие исключения
+		
+		
+	return visualizer
+	
