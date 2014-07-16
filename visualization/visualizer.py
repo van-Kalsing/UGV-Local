@@ -11,21 +11,22 @@ import math
 
 
 class Visualizer:
-	def __init__(self, machine_size, time_interval, *args, **kwargs):
+	def __init__(self, machine_view_size, machine_length, time_interval,
+			*args, **kwargs):
 		super().__init__(*args, **kwargs)
 		
 		
-		self.__machine_length, self.__machine_width = machine_size
-		self.__machine_size                         = machine_size
-		self.__time_interval                        = time_interval
+		self.__machine_view_size = machine_view_size
+		self.__machine_length    = machine_length
+		self.__time_interval     = time_interval
 		
 		
 		
 		
 		
 	@property
-	def machine_size(self):
-		return self.__machine_size
+	def machine_view_size(self):
+		return self.__machine_view_size
 		
 		
 		
@@ -43,8 +44,12 @@ class Visualizer:
 		
 		
 		# Определение параметров образов состояний аппарата
+		machine_view_length, machine_view_width = self.__machine_view_size
+		
+		coordinates_scaling = machine_view_length / self.__machine_length
+		
 		machine_diameter = \
-			(self.__machine_width ** 2.0 + self.__machine_length ** 2.0) \
+			((machine_view_length * 2.0) ** 2.0 + machine_view_width ** 2.0) \
 				** 0.5
 				
 		machine_radius = machine_diameter / 2.0
@@ -74,16 +79,19 @@ class Visualizer:
 		
 		for state in states_sequence:
 			# Создание образа состояния аппарата
-			state_view_angle    = - state.coordinates[2] / math.pi * 180.0
-			state_view_center   = state.coordinates[0], - state.coordinates[1]
+			state_view_angle  = - state.coordinates[2] / math.pi * 180.0
+			state_view_center = \
+				state.coordinates[0] * coordinates_scaling, \
+					- state.coordinates[1] * coordinates_scaling
+					
 			state_view_position = \
-				state_view_center[0] - self.__machine_length / 2.0, \
-					state_view_center[1] - self.__machine_width / 2.0
+				state_view_center[0], \
+					state_view_center[1] - machine_view_width / 2.0
 					
 			state_view = \
 				Rect(
 					insert       = state_view_position,
-					size         = self.__machine_size,
+					size         = self.__machine_view_size,
 					fill         = rgb(255, 255, 255),
 					stroke       = rgb(0, 0, 0),
 					stroke_width = 1
@@ -144,8 +152,11 @@ class Visualizer:
 def load_visualizer(config_file):
 	def create_visualizer(parser):
 		try:
+			machine_view_size = \
+				parser.getfloat("DEFAULT", "MachineViewLength"), \
+					parser.getfloat("DEFAULT", "MachineViewWidth")
+					
 			machine_length = parser.getfloat("DEFAULT", "MachineLength")
-			machine_width  = parser.getfloat("DEFAULT", "MachineWidth")
 			time_interval  = parser.getfloat("DEFAULT", "TimeInterval")
 		except:
 			raise Exception() #!!!!! Генерировать хорошие исключения
@@ -153,8 +164,9 @@ def load_visualizer(config_file):
 			
 		visualizer = \
 			Visualizer(
-				machine_size  = (machine_length, machine_width),
-				time_interval = time_interval
+				machine_view_size = machine_view_size,
+				machine_length    = machine_length,
+				time_interval     = time_interval
 			)
 			
 		return visualizer
