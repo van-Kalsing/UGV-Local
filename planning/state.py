@@ -106,7 +106,7 @@ class State(EvaluatedSearchingState):
 				successor     = None
 				transfer_cost = 0.0
 				
-				for _, machine_state in trajectory:
+				for trajectory_time, machine_state in trajectory:
 					if successor is not None:
 						transfer_cost += \
 							compute_machine_states_distance(
@@ -125,6 +125,13 @@ class State(EvaluatedSearchingState):
 							)
 							
 					if is_final_state:
+						control = \
+							MachineControl(
+								control.velocity,
+								control.angle,
+								trajectory_time
+							)
+							
 						break
 						
 						
